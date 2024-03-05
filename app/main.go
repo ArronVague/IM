@@ -1,12 +1,27 @@
 package main
 
 import (
+	_ "IM/app/model"
 	"fmt"
+	"github.com/gorilla/websocket"
+	"html/template"
+	"log"
 	"net/http"
 	"time"
-
-	"github.com/gorilla/websocket"
 )
+
+func registerView() {
+	tpl, err := template.ParseGlob("./app/view/**/*")
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	for _, v := range tpl.Templates() {
+		tplName := v.Name()
+		http.HandleFunc(tplName, func(writer http.ResponseWriter, request *http.Request) {
+			tpl.ExecuteTemplate(writer, tplName, nil)
+		})
+	}
+}
 
 var (
 	//完成握手操作
@@ -60,10 +75,10 @@ func main() {
 	fmt.Println("websocket server start")
 	//http.HandleFunc 是一个方便的函数，它创建一个默认的 http.ServeMux（HTTP 请求的多路复用器），并且将给定的函数注册到这个多路复用器上。这个函数需要有特定的签名，即 func(ResponseWriter, *Request)。
 	http.HandleFunc("/ws", wsHandler)
+	http.Handle("/asset/", http.FileServer(http.Dir(".")))
+	http.Handle("/resource/", http.FileServer(http.Dir(".")))
+
 	//http.ListenAndServe 函数接受两个参数：一个是服务器的地址，另一个是处理请求的 http.Handler。如果这个 http.Handler 是 nil，那么就会使用默认的 http.ServeMux，也就是我们在 http.HandleFunc 中注册的那个。
-	err := http.ListenAndServe("0.0.0.0:1060", nil)
-	if err != nil {
-		fmt.Println("websocket server start error: %v\n", err)
-		return
-	}
+	log.Fatal(http.ListenAndServe(":1060", nil))
+
 }
