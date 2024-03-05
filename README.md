@@ -75,3 +75,33 @@ WebSocket长连接浪费服务端资源。但是，举个例子：你几个月�
 > 3. **减少网络流量**：由于 WebSocket 连接一旦建立就会保持打开状态，因此它可以减少由于频繁建立和关闭 HTTP 连接所产生的网络流量。
 > 4. **实时性**：WebSocket 支持服务器向客户端推送信息，客户端无需请求即可实时接收信息，这对于 IM 系统来说非常重要。
 > 5. **兼容性**：WebSocket 被所有主流浏览器支持，因此可以在多种平台和设备上使用。
+
+### 4.210行代码万能模版渲染
+
+暂时渲染不出来
+
+### 4.3注册、登录和鉴权
+
+```go
+type User struct {
+        Id         int64     `xorm:"pk autoincr bigint(64)" form:"id" json:"id"`
+        Mobile   string                 `xorm:"varchar(20)" form:"mobile" json:"mobile"`
+        Passwd       string        `xorm:"varchar(40)" form:"passwd" json:"-"`   // 用户密码 md5(passwd + salt)
+        Avatar           string                 `xorm:"varchar(150)" form:"avatar" json:"avatar"`
+        Sex        string        `xorm:"varchar(2)" form:"sex" json:"sex"`
+        Nickname    string        `xorm:"varchar(20)" form:"nickname" json:"nickname"`
+        Salt       string        `xorm:"varchar(10)" form:"salt" json:"-"`
+        Online     int        `xorm:"int(10)" form:"online" json:"online"`   //是否在线
+        Token      string        `xorm:"varchar(40)" form:"token" json:"token"`   //用户鉴权
+        Memo      string        `xorm:"varchar(140)" form:"memo" json:"memo"`
+        Createat   time.Time        `xorm:"datetime" form:"createat" json:"createat"`   //创建时间, 统计用户增量时使用
+}
+```
+
+我认为比较重要的几个字段
+
+- Salt（随机值，增强安全性）
+- Online
+- Token
+
+存储了token标示用户在用户登录之后，http协议升级为websocket协议进行鉴权。
