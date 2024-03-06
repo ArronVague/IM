@@ -81,6 +81,7 @@ func main() {
 	http.HandleFunc("/user/register", controller.UserRegister)
 	http.HandleFunc("/user/login", controller.UserLogin)
 	http.HandleFunc("/contact/addfriend", controller.AddFriend)
+	http.HandleFunc("/contact/loadfriend", controller.LoadFriend)
 	http.HandleFunc("/chat", controller.Chat)
 	http.Handle("/asset/", http.FileServer(http.Dir(".")))
 	http.Handle("/resource/", http.FileServer(http.Dir(".")))

@@ -25,3 +25,10 @@ func AddFriend(writer http.ResponseWriter, request *http.Request) {
 		}
 	}
 }
+
+func LoadFriend(writer http.ResponseWriter, request *http.Request) {
+	var arg args.ContactArg
+	util.Bind(request, &arg)
+	users := contactService.SearchFriend(arg.Userid)
+	util.RespOkList(writer, users, len(users))
+}

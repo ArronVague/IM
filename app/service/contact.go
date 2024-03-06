@@ -48,7 +48,23 @@ func (service *ContactService) AddFriend(userid int64, dstid int64) error {
 	}
 }
 
-// SearchFriendByName 根据姓名搜索用户（看样子其实是手机号）
+// SearchFriend 搜索好友，用于显示好友列表
+func (service *ContactService) SearchFriend(userId int64) []model.User {
+	friends := make([]model.Contact, 0)
+	objIds := make([]int64, 0)
+	model.DbEngine.Where("ownerid = ? and cate = ?", userId, model.ContactCateUser).Find(&friends)
+	for _, v := range friends {
+		objIds = append(objIds, v.Dstobj)
+	}
+	users := make([]model.User, 0)
+	if len(objIds) == 0 {
+		return users
+	}
+	model.DbEngine.In("id", objIds).Find(&users)
+	return users
+}
+
+// SearchFriendByName 根据姓名搜索用户（看样子其实是手机号），主要用于添加好友
 func (service *ContactService) SearchFriendByName(mobile string) model.User {
 	user := model.User{}
 	model.DbEngine.Where("mobile = ?", mobile).Get(&user)
