@@ -19,7 +19,7 @@ func init() {
 	if err != nil && err.Error() != "" {
 		log.Fatal(err)
 	}
-	DbEngine.ShowSQL(true)
+	DbEngine.ShowSQL(false)
 	//设置数据库连接数
 	DbEngine.SetMaxOpenConns(10)
 	//自动创建数据库
