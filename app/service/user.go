@@ -55,3 +55,11 @@ func (s *UserService) Login(mobile, plainPwd string) (user model.User, err error
 	//返回新用户信息
 	return loginUser, nil
 }
+
+// Find 查找某个用户
+func (s *UserService) Find(userId int64) (user model.User) {
+	findUser := model.User{}
+	model.DbEngine.ID(userId).Get(&findUser)
+
+	return findUser
+}
