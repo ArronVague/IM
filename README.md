@@ -120,9 +120,37 @@ type User struct {
 
 存储了token标示用户在用户登录之后，http协议升级为websocket协议进行鉴权。
 
-业务逻辑比较简单。
+注册和登录的业务逻辑比较简单。
 
 比较难的是util.Bind(request, &user)将用户参数绑定到user对象上，具体实现细节读者可以自行研究，主要模仿了Gin框架的参数绑定。
+
+用户客户端如何请求建立与服务端的websocket长连接？
+
+服务端收到建立连接的请求之后，会对客户端请求进行校验，以确实是否建立长连接，然后将这条长连接的句柄添加到map当中(因为服务端不仅仅对一个客户端服务，可能存在千千万万个长连接)维护起来。
+
+```go
+//userid和Node映射关系表
+type Node struct {
+        Conn *websocket.Conn
+        //并行转串行,
+        DataQueue chan []byte
+        GroupSets set.Interface
+}
+```
+
+每一个用户都是Node的实例，消息存放在管道（channel）DataQueue中，GroupSets中存放自己的聊天对象（包括个人用户和群聊）。
+
+注意：建立userid和Node映射的时候加写锁，保证原子安全。
+
+```go
+        rwlocker.Lock()
+        clientMap[userId] = node
+        rwlocker.Unlock()
+```
+
+服务端和客户端建立了长链接之后，会开启两个协程专门来处理客户端消息的收发工作。
+
+例子：客户端A发送消息给客户端B，服务端充当中介，使用recvproc接收客户端A发送来的消息，通过一系列处理，将消息填入B的DataQueue中。sendproc检测到B的管道中有消息，就会将消息发送给客户端B。
 
 ## 参考文献
 
