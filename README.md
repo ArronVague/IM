@@ -120,6 +120,10 @@ type User struct {
 
 存储了token标示用户在用户登录之后，http协议升级为websocket协议进行鉴权。
 
+业务逻辑比较简单。
+
+比较难的是util.Bind(request, &user)将用户参数绑定到user对象上，具体实现细节读者可以自行研究，主要模仿了Gin框架的参数绑定。
+
 ## 参考文献
 
 [**跟着源码学IM(六)：手把手教你用Go快速搭建高性能、可扩展的IM系统**](http://www.52im.net/thread-2988-1-1.html)

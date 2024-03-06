@@ -18,7 +18,10 @@ func registerView() {
 		tplName := v.Name()
 		http.HandleFunc(tplName, func(writer http.ResponseWriter, request *http.Request) {
 			tplName := tplName // 创建一个新的变量
-			tpl.ExecuteTemplate(writer, tplName, nil)
+			err := tpl.ExecuteTemplate(writer, tplName, nil)
+			if err != nil {
+				return
+			}
 		})
 	}
 }
@@ -76,6 +79,7 @@ func main() {
 	//http.HandleFunc 是一个方便的函数，它创建一个默认的 http.ServeMux（HTTP 请求的多路复用器），并且将给定的函数注册到这个多路复用器上。这个函数需要有特定的签名，即 func(ResponseWriter, *Request)。
 	//http.HandleFunc("/ws", wsHandler)
 	http.HandleFunc("/user/register", controller.UserRegister)
+	http.HandleFunc("/user/login", controller.UserLogin)
 	http.Handle("/asset/", http.FileServer(http.Dir(".")))
 	http.Handle("/resource/", http.FileServer(http.Dir(".")))
 

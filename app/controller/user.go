@@ -20,3 +20,21 @@ func UserRegister(writer http.ResponseWriter, request *http.Request) {
 		util.RespOk(writer, user, "")
 	}
 }
+
+func UserLogin(writer http.ResponseWriter, request *http.Request) {
+	request.ParseForm()
+
+	mobile := request.PostForm.Get("mobile")
+	plainPwd := request.PostForm.Get("passwd")
+
+	if len(mobile) == 0 || len(plainPwd) == 0 {
+		util.RespFail(writer, "用户名或密码不正确")
+	}
+
+	loginUser, err := UserService.Login(mobile, plainPwd)
+	if err != nil {
+		util.RespFail(writer, err.Error())
+	} else {
+		util.RespOk(writer, loginUser, "")
+	}
+}
