@@ -132,7 +132,7 @@ func recvproc(node *Node) {
 
 		dispatch(data)
 		//todo对data进一步处理
-		fmt.Printf("recv<=%s", data)
+		fmt.Printf("recv<=%s\n", data)
 	}
 }
 
