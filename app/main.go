@@ -80,6 +80,7 @@ func main() {
 	//http.HandleFunc("/ws", wsHandler)
 	http.HandleFunc("/user/register", controller.UserRegister)
 	http.HandleFunc("/user/login", controller.UserLogin)
+	http.HandleFunc("/chat", controller.Chat)
 	http.Handle("/asset/", http.FileServer(http.Dir(".")))
 	http.Handle("/resource/", http.FileServer(http.Dir(".")))
 

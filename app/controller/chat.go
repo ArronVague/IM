@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/gorilla/websocket"
 	"gopkg.in/fatih/set.v0"
@@ -16,6 +17,47 @@ type Node struct {
 	//并行转串行
 	DataQueue chan []byte
 	GroupSets set.Interface
+}
+
+// 定义命令行格式
+const (
+	CmdSingleMsg = 10
+	CmdRoomMsg   = 11
+	CmdHeart     = 0
+)
+
+type Message struct {
+	Id      int64  `json:"id,omitempty" form:"id"`           //消息ID
+	Userid  int64  `json:"userid,omitempty" form:"userid"`   //谁发的
+	Cmd     int    `json:"cmd,omitempty" form:"cmd"`         //群聊还是私聊
+	Dstid   int64  `json:"dstid,omitempty" form:"dstid"`     //对端用户ID/群ID
+	Media   int    `json:"media,omitempty" form:"media"`     //消息按照什么样式展示
+	Content string `json:"content,omitempty" form:"content"` //消息的内容
+	Pic     string `json:"pic,omitempty" form:"pic"`         //预览图片
+	Url     string `json:"url,omitempty" form:"url"`         //服务的URL
+	Memo    string `json:"memo,omitempty" form:"memo"`       //简单描述
+	Amount  int    `json:"amount,omitempty" form:"amount"`   //其他和数字相关的
+}
+
+func dispatch(data []byte) {
+	msg := Message{}
+	err := json.Unmarshal(data, &msg)
+	if err != nil {
+		log.Println(err.Error())
+		return
+	}
+	switch msg.Cmd {
+	case CmdSingleMsg:
+		sendMsg(msg.Dstid, data)
+	case CmdRoomMsg:
+		for _, v := range clientMap {
+			if v.GroupSets.Has(msg.Dstid) {
+				v.DataQueue <- data
+			}
+		}
+	case CmdHeart:
+		//检测客户端的心跳
+	}
 }
 
 // userid和Node映射关系表
@@ -61,17 +103,8 @@ func Chat(writer http.ResponseWriter, request *http.Request) {
 	go sendproc(node)
 
 	go recvproc(node)
-}
 
-// 在 Web 开发中，使用 token 进行身份验证是一种常见的安全策略。这是因为仅仅依赖用户 ID 来进行身份验证是不安全的，因为用户 ID 通常是公开的，任何人都可以知道，如果只需要用户 ID 就能进行操作，那么任何人都可以伪装成任何用户。
-//
-// Token 是服务器为每一个已认证的用户生成的一个唯一的、难以猜测的字符串。当用户进行登录操作时，服务器会生成一个 token 并返回给用户，用户在后续的请求中需要带上这个 token 来证明自己的身份。服务器收到请求后，会检查 token 是否有效（例如检查 token 是否存在，是否过期，是否和用户 ID 匹配等），只有当 token 有效时，服务器才会处理用户的请求。
-//
-// 这种方式的优点是，即使其他人知道了用户的 ID，但是如果没有有效的 token，他们仍然无法伪装成用户。此外，服务器可以随时使一个 token 失效（例如用户登出时），从而结束用户的会话。
-// 校验token是否合法
-func checkToken(userId int64, token string) bool {
-	user := UserService.Find(userId)
-	return user.Token == token
+	sendMsg(userId, []byte("welcome"))
 }
 
 // 发送逻辑
@@ -101,4 +134,24 @@ func recvproc(node *Node) {
 		//todo对data进一步处理
 		fmt.Printf("recv<=%s", data)
 	}
+}
+
+func sendMsg(userId int64, msg []byte) {
+	rwLocker.RLock()
+	node, ok := clientMap[userId]
+	rwLocker.RUnlock()
+	if ok {
+		node.DataQueue <- msg
+	}
+}
+
+// 在 Web 开发中，使用 token 进行身份验证是一种常见的安全策略。这是因为仅仅依赖用户 ID 来进行身份验证是不安全的，因为用户 ID 通常是公开的，任何人都可以知道，如果只需要用户 ID 就能进行操作，那么任何人都可以伪装成任何用户。
+//
+// Token 是服务器为每一个已认证的用户生成的一个唯一的、难以猜测的字符串。当用户进行登录操作时，服务器会生成一个 token 并返回给用户，用户在后续的请求中需要带上这个 token 来证明自己的身份。服务器收到请求后，会检查 token 是否有效（例如检查 token 是否存在，是否过期，是否和用户 ID 匹配等），只有当 token 有效时，服务器才会处理用户的请求。
+//
+// 这种方式的优点是，即使其他人知道了用户的 ID，但是如果没有有效的 token，他们仍然无法伪装成用户。此外，服务器可以随时使一个 token 失效（例如用户登出时），从而结束用户的会话。
+// 校验token是否合法
+func checkToken(userId int64, token string) bool {
+	user := UserService.Find(userId)
+	return user.Token == token
 }
