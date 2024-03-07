@@ -83,9 +83,11 @@ func main() {
 	http.HandleFunc("/contact/addfriend", controller.AddFriend)
 	http.HandleFunc("/contact/loadfriend", controller.LoadFriend)
 	http.HandleFunc("/chat", controller.Chat)
+	http.HandleFunc("/attach/upload", controller.FileUpload)
+
+	//提供静态资源目录支持
 	http.Handle("/asset/", http.FileServer(http.Dir(".")))
 	http.Handle("/resource/", http.FileServer(http.Dir(".")))
-
 	registerView()
 	//http.ListenAndServe 函数接受两个参数：一个是服务器的地址，另一个是处理请求的 http.Handler。如果这个 http.Handler 是 nil，那么就会使用默认的 http.ServeMux，也就是我们在 http.HandleFunc 中注册的那个。
 	log.Fatal(http.ListenAndServe(":1060", nil))
